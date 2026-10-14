@@ -128,11 +128,53 @@ jobs:
           docker compose config
 
   # -------------------------------------------------------------
-  # Job 4: Continuous Deployment (CD)
+  # Job 4: Runtime Smoke Test - start stack and probe /actuator/health
+  # -------------------------------------------------------------
+  runtime-verify:
+    name: Runtime Stack Smoke Test
+    needs: [docker-verify]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Start MySQL and Backend containers
+        run: |
+          docker compose up -d --build mysql backend
+          echo "Waiting for backend healthcheck..."
+          for i in $(seq 1 40); do
+            state=$(docker inspect -f '{{.State.Health.Status}}' campushub-backend 2>/dev/null || echo starting)
+            echo "attempt $i: $state"
+            [ "$state" = "healthy" ] && break
+            sleep 10
+          done
+
+      - name: Probe Actuator Health Endpoint
+        run: |
+          curl -sS -i http://localhost:8080/actuator/health | tee health-probe.txt
+          docker compose ps
+
+      - name: Upload Health Probe Evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: health-probe
+          path: health-probe.txt
+          retention-days: 7
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose logs backend mysql
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v
+
+  # -------------------------------------------------------------
+  # Job 5: Continuous Deployment (CD)
   # -------------------------------------------------------------
   deploy:
     name: Package Release Bundle
-    needs: [docker-verify]
+    needs: [runtime-verify]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
