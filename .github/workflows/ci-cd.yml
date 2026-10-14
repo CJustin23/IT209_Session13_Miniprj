@@ -131,36 +131,37 @@ jobs:
   # Job 4: Continuous Deployment (CD)
   # -------------------------------------------------------------
   deploy:
-    name: Deploy to Public Production
+    name: Package Release Bundle
     needs: [docker-verify]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://campushub-ptit.onrender.com
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-bundle
+
       - name: Display Release Information
         run: |
           echo "=========================================================="
-          echo "🚀 INITIATING AUTOMATED PRODUCTION DEPLOYMENT"
+          echo "RELEASE BUNDLE FOR THIS COMMIT"
           echo "=========================================================="
           echo "Commit: ${{ github.sha }}"
           echo "Author: ${{ github.actor }}"
           echo "Ref:    ${{ github.ref_name }}"
-          echo "Target: Production Cloud Cluster"
+          find release-bundle -type f -exec ls -lh {} \;
 
-      - name: Trigger Webhook / Cloud Deployment
-        run: |
-          echo "📦 Synchronizing Docker Compose stack with Production Host..."
-          echo "🔄 Pulling latest images & executing zero-downtime rolling update..."
-          sleep 3
-          echo "✅ Container instances updated successfully!"
+      - name: Upload Release Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundle
+          path: release-bundle
+          retention-days: 7
 
-      - name: Post-Deployment Smoke & Health Check
+      - name: Deployment Note
         run: |
-          echo "🩺 Executing post-deployment health check..."
-          echo "HTTP GET /actuator/health -> {\"status\":\"UP\"}"
-          echo "🎉 System is healthy and operational at https://campushub-ptit.onrender.com"
+          echo "Stack is deployed manually with 'docker compose up -d --build'."
+          echo "Health probe to verify after startup: curl http://localhost:8080/actuator/health"

@@ -3,6 +3,7 @@
 > **Đề tài Mini Project Session 13 — Môn IT209: DevOps & Kỹ thuật Vận hành Hệ thống**  
 > **Đơn vị đào tạo:** Học viện Công nghệ Bưu chính Viễn thông (PTIT)  
 > **Dự án gốc:** [Campus Hub Base](https://github.com/dinhthanhnam/campus-hub-base)  
+> **Kho lưu trữ:** [CJustin23/IT209_Session13_Miniprj](https://github.com/CJustin23/IT209_Session13_Miniprj)  
 > **Phiên bản nâng cấp:** `Campus Hub Pro v2.0-release`
 
 ---
@@ -182,6 +183,6 @@ Hệ thống được thiết kế sẵn sàng cho việc triển khai công kha
 ---
 
 ## 👥 8. Thành viên Thực hiện
-* **Sinh viên:** Nguyễn Việt Nam
-* **Lớp:** D21CQCN04-B (CNTT4) — PTIT
+* **Sinh viên:** Nguyễn Trường An
+* **Lớp:** HN-KS24-CNTT3 — PTIT
 * **Môn học:** IT209 — DevOps & Vận hành Phần mềm
