@@ -165,20 +165,39 @@ npm run lint
 npm run build
 ```
 
-Kết quả: **10/10 kiểm thử tích hợp thành công, 0 lỗi cú pháp.**
+Kết quả: **10/10 kiểm thử tích hợp thành công, 0 lỗi cú pháp** (đo trên job `Backend Test & Packaging`, lần chạy CI `38501250878` của commit `d323d70`).
 
 ---
 
-## 🌐 7. Triển khai Công khai (Public Deployment)
+## 🚀 6b. Pipeline CI/CD Thực Tế
 
-Hệ thống được thiết kế sẵn sàng cho việc triển khai công khai trên các nền tảng đám mây (Cloud Platforms):
-* **Phương án 1 (Cloud PaaS):** Triển khai trực tiếp lên Render / Railway thông qua Dockerfile có sẵn.
-* **Phương án 2 (Cloudflare Tunnel / Ngrok):** Tạo đường hầm truy cập an toàn ra internet trong buổi bảo vệ trực tiếp:
-  ```bash
-  ngrok http 80
-  # hoặc: cloudflared tunnel --url http://localhost:80
-  ```
-  Hệ thống cung cấp đường dẫn HTTPS công khai để hội đồng và các nhóm sinh viên trải nghiệm thực tế.
+Pipeline `.github/workflows/ci-cd.yml` gồm 5 job, toàn bộ đều xanh ở lần chạy bảo vệ:
+
+| Job | Nội dung | Thời gian |
+|---|---|---|
+| 1. Frontend Quality & Build | `npm ci` (134 package) → ESLint → Vite build → artifact `frontend-dist` | 12s |
+| 2. Backend Test & Packaging | JDK 21 Temurin → `./gradlew test` (10 tests) → `bootJar` → artifact `backend-jar` | 46s |
+| 3. Docker Container Validation | Buildx build 2 image frontend/backend → `docker compose config` | 83s |
+| 4. Runtime Stack Smoke Test | `docker compose up -d --build mysql backend` → chờ healthcheck → `curl /actuator/health` → artifact `health-probe` | 103s |
+| 5. Package Release Bundle | Gộp toàn bộ artifact thành `release-bundle` | 8s |
+
+Kết quả chạy: https://github.com/CJustin23/IT209_Session13_Miniprj/actions/runs/38501250878
+
+---
+
+## 🌐 7. Triển khai (Deployment)
+
+Hệ thống chạy trọn bộ bằng Docker Compose trên máy local, và mở ra internet bằng tunnel trong buổi bảo vệ:
+
+```bash
+cp .env.example .env
+docker compose up -d --build          # Frontend: http://localhost, API: http://localhost:8080
+curl http://localhost:8080/actuator/health   # {"status":"UP", ...}
+
+# Mở đường dẫn công khai tạm thời cho hội đồng:
+ngrok http 80
+# hoặc: cloudflared tunnel --url http://localhost:80
+```
 
 ---
 
